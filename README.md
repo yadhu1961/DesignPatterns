@@ -1,2 +1,2 @@
 # DesignPatterns
-Example programs of popular design patterns
+Example programs of popular design patterns.
