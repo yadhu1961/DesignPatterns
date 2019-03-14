@@ -5,12 +5,14 @@
  *      Author: yadhu
  */
 
-#include <iostream>
 #include "Duck.h"
+#include <iostream>
 #include "SimpleDisplay.h"
 #include "SimpleFly.h"
 
-int main() {
+int main()
+{
+  std::cout << "Duck tester\n";
   auto simpleDuck = new Duck(new SimpleFly(), new SimpleDisplay());
   simpleDuck->fly();
 }
