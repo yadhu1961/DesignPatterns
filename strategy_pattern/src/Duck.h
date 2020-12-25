@@ -7,11 +7,13 @@
 
 #include "IDisplayBehaviour.h"
 #include "IFlyBehaviour.h"
+#include <memory>
 
 #pragma once
 
-class Duck {
- public:
+class Duck
+{
+public:
   Duck(IFlyBehaviour *, IDisplayBehaviour *);
   virtual ~Duck();
 
@@ -19,7 +21,7 @@ class Duck {
 
   void display() const;
 
- private:
-  IFlyBehaviour *m_flyBehaviour;
-  IDisplayBehaviour *m_displayBehaviour;
+private:
+  std::unique_ptr<IFlyBehaviour>     m_flyBehaviour;
+  std::unique_ptr<IDisplayBehaviour> m_displayBehaviour;
 };

@@ -7,11 +7,13 @@
 
 #include "SimpleDisplay.h"
 
-SimpleDisplay::SimpleDisplay() {
+SimpleDisplay::SimpleDisplay()
+{
   // TODO Auto-generated constructor stub
 }
 
-SimpleDisplay::~SimpleDisplay() {
+SimpleDisplay::~SimpleDisplay()
+{
   // TODO Auto-generated destructor stub
 }
 
