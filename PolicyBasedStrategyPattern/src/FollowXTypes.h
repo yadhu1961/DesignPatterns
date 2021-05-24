@@ -9,9 +9,6 @@
 #include <iostream>
 #include <vector>
 #include <string>
-#include <memory>
-#include <type_traits>
-#include <initializer_list>
 
 struct ResourceIndicator
 {
@@ -77,6 +74,10 @@ struct FollowXIF
 {
   FollowXIF() = default;
 
+  template <typename inputArgs>
+  FollowXIF(inputArgs&)
+  {}
+
   void update(const CsiResultHolder&) {}
 
   void adaptSchedParams(AdaRiCqi& adaRiCqi) {}
@@ -85,8 +86,9 @@ struct FollowXIF
 template <typename Base>
 struct FollowRsrcInd
 {
-  FollowRsrcInd()
-      : Base()
+  template <typename inputArgs>
+  FollowRsrcInd(const inputArgs& inInputArgs)
+      : Base(inInputArgs)
       , resourceIndicator{}
   {}
 
@@ -110,9 +112,10 @@ struct FollowRsrcInd
   ResourceIndicator resourceIndicator;
 };
 
-template <typename Base, typename inputArgs>
+template <typename Base>
 struct FollowRi : public Base
 {
+  template <typename inputArgs>
   FollowRi(inputArgs& inInputArgs)
       : Base(inInputArgs)
       , rankIndicator{}
@@ -166,17 +169,66 @@ struct FollowCqi : public Base
 };
 
 /**
+ * @struct FollowFixed default mode is followFixed, It is dummy.
+ * @brief
+ *
+ */
+struct FollowFixed
+{
+  void update(const CsiResultHolder& csiResultHolder) { std::cout << "FollowFixed update\n"; }
+
+  void adaptSchedParams(AdaRiCqi& adaRiCqi)
+  {
+    std::cout << "FollowFixed adaptSchedParams\n";
+    /**
+     * Just return the user configured scheduling params
+     */
+  }
+};
+
+/**
+ * @struct FollowBo is orthogonal to other follow modes
+ * @brief
+ *
+ */
+struct FollowBo
+{
+  void update(const CsiResultHolder& csiResultHolder)
+  {
+    // Store the BO value here.
+    std::cout << "FollowBo update\n";
+  }
+
+  void adaptSchedParams(AdaRiCqi& adaRiCqi)
+  {
+    std::cout << "FollowBo adaptSchedParams\n";
+    /**
+     * Impl logic to select MCS and RIV based on the BO value.
+     */
+  }
+};
+
+/**
  * @enum SchedulingMode
  * @brief
  *
  */
 enum class SchedulingMode
 {
-  fixedMode,  /**< fixedMode */
-  followBo,   /**< followBo */
-  followCqi,  /**< followCqi */
-  followRiCqi /**< followRiCqi */
+  followFixed, /**< followFixed */
+  followBo,    /**< followBo */
+  followCqi,   /**< followCqi */
+  followRi,    /**< followRi */
+  followBeam,  /**< followBeam */
+  followRiCqi  /**< followRiCqi */
 };
+using CqiTable = std::vector<Cqi>;
 
-using FollowRiCqi     = FollowRi<FollowCqi<FollowXIF>, std::vector<Cqi>>;
-using FollowBeamRiCqi = FollowRsrcInd<FollowRi<FollowCqi<FollowXIF>, std::vector<Cqi>>>;
+/**
+ * Now create followModes in all the permutation and combinations as necessary.
+ */
+using FollowRiCqi_AdaptRankMcs         = FollowRi<FollowCqi<FollowXIF>>;
+using FollowRi_AdaptRank               = FollowRi<FollowXIF>;
+using FollowBeam_AdaptBeam             = FollowRsrcInd<FollowXIF>;
+using FollowBeamRiCqi_AdaptBeamRankMcs = FollowRsrcInd<FollowRi<FollowCqi<FollowXIF>>>;
+using FollowBeamCqi_AdaptBeamMcs       = FollowRsrcInd<FollowCqi<FollowXIF>>;

@@ -9,9 +9,26 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <type_traits>
 #include <memory>
 
-#include "TemplateChainTypes.h"
+#include "FollowXTypes.h"
+
+/**
+ * @class IFollowXScheduler
+ * @brief IF Class for all the FollowXSchedulers.
+ *
+ */
+class IFollowXScheduler
+{
+public:
+  virtual AdaRiCqi adaptSchedParams()             = 0;
+  virtual void     update(const CsiResultHolder&) = 0;
+
+  virtual SchedulingMode getSchedulingMode() = 0;
+
+  virtual ~IFollowXScheduler() = default;
+};
 
 /**
  * @class FollowXScheduler
@@ -21,17 +38,17 @@
  * @tparam SchedulingModeConfig
  */
 template <typename FollowMode>
-class IFollowXScheduler
+class TFollowXScheduler : public IFollowXScheduler
 {
 public:
-  IFollowXScheduler(FollowMode* followMode)
-      : followMode{followMode}
+  TFollowXScheduler(FollowMode followMode)
+      : followMode{std::move(followMode)}
   {}
 
-  void update(const CsiResultHolder& csiReportHolder)
+  void update(const CsiResultHolder& csiReportHolder) override final
   {
     std::cout << "updating: " << __func__ << std::endl;
-    followMode->update(csiReportHolder);
+    followMode.update(csiReportHolder);
   }
 
   /**
@@ -42,12 +59,12 @@ public:
    * @post
    * @return
    */
-  AdaRiCqi adaptSchedParams(/*AssignmentItem here*/)
+  AdaRiCqi adaptSchedParams(/*AssignmentItem here*/) override final
   {
     AdaRiCqi adaCqiParams;
     std::cout << "adaptSchedParams: " << __func__ << ", before: " << adaCqiParams.toString() << std::endl;
 
-    followMode->adaptSchedParams(adaCqiParams);
+    followMode.adaptSchedParams(adaCqiParams);
 
     std::cout << "adaptSchedParams: " << __func__ << ", after: " << adaCqiParams.toString() << std::endl;
     return adaCqiParams;
@@ -58,21 +75,21 @@ public:
    * @brief
    *
    * @pre
-   * @post
+   * @post   TODO extend for new followModes
    * @return
    */
-  constexpr SchedulingMode getSchedulingMode()
+  constexpr SchedulingMode getSchedulingMode() override final
   {
-    if constexpr (std::is_same_v<FollowMode, FollowRiCqi>)
+    if constexpr (std::is_same_v<FollowMode, FollowRiCqi_AdaptRankMcs>)
     {
       return SchedulingMode::followRiCqi;
     }
     else
     {
-      return SchedulingMode::fixedMode;
+      return SchedulingMode::followFixed;
     }
   }
 
 private:
-  std::unique_ptr<FollowMode> followMode;
+  FollowMode followMode;
 };

@@ -8,32 +8,35 @@
 
 #include <iostream>
 #include <vector>
-#include "TemplateChainTypes.h"
+
+#include "FollowXTypes.h"
 #include "IFollowXScheduler.h"
 
 using namespace std;
 
-// static FollowMode* createFollowMode(const SchedulingModeConfig& schedulingModeConfig)
-//{
-//  if constexpr (std::is_same_v<FollowMode, FollowRiCqi>)
-//  {
-//    return new FollowMode(schedulingModeConfig);
-//  }
-//  else
-//  {
-//    return nullptr;
-//  }
-//}
+namespace {
+
+static IFollowXScheduler* followXfactory(const SchedulingMode schedulingMode, std::vector<Cqi>&& cqiVector)
+{
+  bool dummyParam{false};
+  switch (schedulingMode)
+  {
+    case SchedulingMode::followRiCqi: return new TFollowXScheduler(FollowRiCqi_AdaptRankMcs(cqiVector));
+    case SchedulingMode::followBo: return new TFollowXScheduler(FollowBo());
+    case SchedulingMode::followRi: return new TFollowXScheduler(FollowRi_AdaptRank(dummyParam));
+    default: return new TFollowXScheduler(FollowFixed());
+  }
+}
+
+}   // namespace
 
 int main()
 {
-  cout << "TemplateChaining\n" << endl;   // prints TemplateChaining
+  cout << "PolicyBasedDesign +  StrategyPattern\n" << endl;   // prints TemplateChaining
 
-  std::vector<Cqi> cqiVector{0, 1, 2, 3, 4};
+  std::unique_ptr<IFollowXScheduler> followXScheduler{followXfactory(SchedulingMode::followRiCqi, CqiTable{0, 1, 2, 3, 4})};
 
-  IFollowXScheduler<FollowRiCqi> followXScheduler{new FollowRiCqi(cqiVector)};
-
-  followXScheduler.update(CsiResultHolder(ResourceIndicator{0}, Cqi{0}, Ri{0}));
+  followXScheduler->update(CsiResultHolder(ResourceIndicator{0}, Cqi{0}, Ri{0}));
 
   //  FollowRiCqi followRiCqi(cqiTable);
   //
@@ -41,9 +44,7 @@ int main()
   //
   //  AdaRiCqi adaRiCqi(ResourceIndicator{-1}, Cqi{-1}, Ri{-1});
   //
-  followXScheduler.adaptSchedParams();
-  //
-  //  std::cout << adaRiCqi.toString();
+  followXScheduler->adaptSchedParams();
 
   return 0;
 }
