@@ -1,9 +1,10 @@
 //============================================================================
 // Name        : Crtp.cpp
 // Author      : Yadu
-// Version     :
 // Copyright   : Your copyright notice
 // Description : Example of Curiously Recurring Template Pattern
+// Base class is templated with derived class type.
+// mainly used to avoid virtual tables hence dynamic polymorphism and run time overhead
 //============================================================================
 
 #include <iostream>
@@ -16,7 +17,11 @@ class Base
 public:
   void DerivedFunc() { std::cout << "Base\n"; }
 
-  void interface() { static_cast<T*>(this)->food(); }
+  void interface()
+  {
+    std::cout << "base class interface\n";
+    static_cast<T*>(this)->food();
+  }
 };
 
 class DerivedA : public Base<DerivedA>
