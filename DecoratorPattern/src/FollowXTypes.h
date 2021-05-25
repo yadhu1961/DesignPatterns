@@ -80,16 +80,17 @@ struct FollowXIF
   void virtual adaptSchedParams(AdaRiCqi& adaRiCqi) = 0;
 };
 
-struct FollowXDummy : public FollowXIF
+struct FollowXDummy
 {
-  void virtual update(const CsiResultHolder&) override final{};
+  void update(const CsiResultHolder&){};
 
-  void virtual adaptSchedParams(AdaRiCqi&) override final{};
+  void adaptSchedParams(AdaRiCqi&){};
 };
 
-struct FollowRsrcInd : public FollowXIF
+template <typename FollowX>
+struct FollowRsrcInd
 {
-  FollowRsrcInd(FollowXIF* inFollowX)
+  FollowRsrcInd(FollowX inFollowX)
       : resourceIndicator{}
       , followXIf(inFollowX)
   {}
@@ -111,13 +112,14 @@ struct FollowRsrcInd : public FollowXIF
     followXIf->adaptSchedParams(adaRiCqi);
   }
 
-  ResourceIndicator          resourceIndicator;
-  std::unique_ptr<FollowXIF> followXIf;
+  ResourceIndicator resourceIndicator;
+  FollowX           followXIf;
 };
 
-struct FollowRi : public FollowXIF
+template <typename FollowX>
+struct FollowRi
 {
-  FollowRi(FollowXIF* inFollowX)
+  FollowRi(FollowX inFollowX)
       : rankIndicator{}
       , followXIf(inFollowX)
   {}
@@ -129,45 +131,46 @@ struct FollowRi : public FollowXIF
       rankIndicator = csiResultHolder.ri;
     }
     std::cout << "FollowRi update\n";
-    followXIf->update(csiResultHolder);
+    followXIf.update(csiResultHolder);
   }
 
   void adaptSchedParams(AdaRiCqi& adaRiCqi)
   {
     std::cout << "FollowRi adaptSchedParams\n";
     adaRiCqi.ri = rankIndicator;
-    followXIf->adaptSchedParams(adaRiCqi);
+    followXIf.adaptSchedParams(adaRiCqi);
   }
 
-  Ri                         rankIndicator;
-  std::unique_ptr<FollowXIF> followXIf;
+  Ri      rankIndicator;
+  FollowX followXIf;
 };
 
-struct FollowCqi : public FollowXIF
+template <typename FollowX>
+struct FollowCqi
 {
-  FollowCqi(FollowXIF* inFollowXIf, std::vector<Cqi> inCqiTable)
+  FollowCqi(FollowX inFollowX, std::vector<Cqi> inCqiTable)
       : channelQualityIndicator{0}
       , cqiTable{inCqiTable}
-      , followXIf{inFollowXIf}
+      , followXIf{inFollowX}
   {}
 
   void update(const CsiResultHolder& csiResultHolder)
   {
     channelQualityIndicator = csiResultHolder.cqi;
     std::cout << "FollowCqi update\n";
-    followXIf->update(csiResultHolder);
+    followXIf.update(csiResultHolder);
   }
 
   void adaptSchedParams(AdaRiCqi& adaRiCqi)
   {
     std::cout << "FollowCqi adaptSchedParams\n";
     adaRiCqi.cqi = channelQualityIndicator;
-    followXIf->adaptSchedParams(adaRiCqi);
+    followXIf.adaptSchedParams(adaRiCqi);
   }
 
-  Cqi                        channelQualityIndicator;
-  const std::vector<Cqi>     cqiTable;
-  std::unique_ptr<FollowXIF> followXIf;
+  Cqi                    channelQualityIndicator;
+  const std::vector<Cqi> cqiTable;
+  FollowX                followXIf;
 };
 
 /**
@@ -225,3 +228,9 @@ enum class SchedulingMode
   followRiCqi  /**< followRiCqi */
 };
 using CqiTable = std::vector<Cqi>;
+
+using FollowRiCqi_AdaptRankMcs         = FollowRi<FollowCqi<FollowXDummy>>;
+using FollowRi_AdaptRank               = FollowRi<FollowXDummy>;
+using FollowBeam_AdaptBeam             = FollowRsrcInd<FollowXDummy>;
+using FollowBeamRiCqi_AdaptBeamRankMcs = FollowRsrcInd<FollowRi<FollowCqi<FollowXDummy>>>;
+using FollowBeamCqi_AdaptBeamMcs       = FollowRsrcInd<FollowCqi<FollowXDummy>>;

@@ -15,24 +15,41 @@
 #include "FollowXTypes.h"
 
 /**
+ * @class IFollowXScheduler
+ * @brief IF Class for all the FollowXSchedulers.
+ *
+ */
+class IFollowXScheduler
+{
+public:
+  virtual AdaRiCqi adaptSchedParams()             = 0;
+  virtual void     update(const CsiResultHolder&) = 0;
+
+  virtual SchedulingMode getSchedulingMode() = 0;
+
+  virtual ~IFollowXScheduler() = default;
+};
+
+/**
  * @class FollowXScheduler
  * @brief
  *
  * @tparam FollowMode
  * @tparam SchedulingModeConfig
  */
-class TFollowXScheduler
+template <typename FollowX>
+class TFollowXScheduler : public IFollowXScheduler
 {
 public:
-  TFollowXScheduler(FollowXIF* followMode, SchedulingMode mode)
+  TFollowXScheduler(FollowX followMode, SchedulingMode mode)
       : followMode{followMode}
       , schedulingMode{mode}
   {}
 
-  void update(const CsiResultHolder& csiReportHolder)
+  void update(const CsiResultHolder& csiReportHolder) override final
   {
     std::cout << "updating: " << __func__ << std::endl;
-    followMode->update(csiReportHolder);
+    followMode.update(csiReportHolder);
   }
 
   /**
@@ -43,12 +60,12 @@ public:
    * @post
    * @return
    */
-  AdaRiCqi adaptSchedParams(/*AssignmentItem here*/)
+  AdaRiCqi adaptSchedParams(/*AssignmentItem here*/) override final
   {
     AdaRiCqi adaCqiParams;
     std::cout << "adaptSchedParams: " << __func__ << ", before: " << adaCqiParams.toString() << std::endl;
 
-    followMode->adaptSchedParams(adaCqiParams);
+    followMode.adaptSchedParams(adaCqiParams);
 
     std::cout << "adaptSchedParams: " << __func__ << ", after: " << adaCqiParams.toString() << std::endl;
     return adaCqiParams;
@@ -65,6 +82,6 @@ public:
   constexpr SchedulingMode getSchedulingMode() { return schedulingMode; }
 
 private:
-  std::unique_ptr<FollowXIF> followMode;
-  SchedulingMode             schedulingMode;
+  FollowX        followMode;
+  SchedulingMode schedulingMode;
 };
