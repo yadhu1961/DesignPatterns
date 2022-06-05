@@ -12,11 +12,15 @@
 
 int main()
 {
+<<<<<<< HEAD
 
   std::unique_ptr<Duck> simpleDuck(new Duck(new SimpleFly(), new SimpleDisplay()));
 
   std::cout << "Duck tester\n";
 
+=======
+  std::unique_ptr<Duck> simpleDuck(new Duck(new SimpleFly(), new SimpleDisplay()));
+>>>>>>> a753112 (Updated .gitignore)
   simpleDuck->fly();
   simpleDuck->display();
 }
