@@ -50,4 +50,4 @@ _deps
 */*.settings/
 *.project
 *.vscode/
-*/bin/*
+bin
