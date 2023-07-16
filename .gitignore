@@ -49,4 +49,5 @@ _deps
 *.cproject
 */*.settings/
 *.project
-
+*.vscode/
+*/bin/*
